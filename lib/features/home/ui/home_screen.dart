@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_app/features/data/food_list.dart';
-import 'package:food_app/features/exercise_lists/filter_screen.dart';
-import 'package:food_app/features/exercise_lists/selected_item.dart';
+import 'package:food_app/features/app_components/filter_screen.dart';
+import 'package:food_app/features/app_components/selected_item.dart';
 
 final FirebaseFirestore _firebasestore = FirebaseFirestore.instance;
 
