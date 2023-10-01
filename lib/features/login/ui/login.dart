@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:food_app/features/home/ui/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:food_app/features/login/ui/login.dart';
 
-class Signup extends StatefulWidget {
-  static const String id = "Signup";
-  const Signup({super.key});
+class Login extends StatefulWidget {
+  static const String id = "Login";
+  const Login({super.key});
 
   @override
-  State<Signup> createState() => _SignupState();
+  State<Login> createState() => _LoginState();
 }
 
-class _SignupState extends State<Signup> {
+class _LoginState extends State<Login> {
   final _auth = FirebaseAuth.instance;
-  late String email;
-  late String password;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String email = '';
+  String password = '';
+  String emailErrorMessage = '';
+  String passwordErrorMessage = '';
+  bool _hasError = false;
+
   bool textPrivacy = false;
 
   @override
@@ -26,7 +32,7 @@ class _SignupState extends State<Signup> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Center(
-                  child: Text("Signup",
+                  child: Text("Login",
                       style: TextStyle(
                           fontSize: 30.0, fontWeight: FontWeight.bold))),
               const SizedBox(
@@ -37,15 +43,19 @@ class _SignupState extends State<Signup> {
                 height: 10.0,
               ),
               TextField(
+                controller: _emailController,
                 onChanged: (value) {
                   email = value;
                 },
-                decoration: const InputDecoration(
-                    prefixIconColor: Colors.grey,
-                    prefixIcon: Icon(Icons.mail),
-                    hintText: "Enter Email",
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(15.0)))),
+                decoration: InputDecoration(
+                  hintText: "Enter Email",
+                  prefixIconColor: Colors.grey,
+                  prefixIcon: Icon(Icons.mail),
+                  border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey),
+                      borderRadius: BorderRadius.all(Radius.circular(15.0))),
+                  errorText: _hasError ? emailErrorMessage : null,
+                ),
               ),
               const SizedBox(
                 height: 20.0,
@@ -58,13 +68,15 @@ class _SignupState extends State<Signup> {
                 height: 10.0,
               ),
               TextField(
+                controller: _passwordController,
                 onChanged: (value) {
                   password = value;
                 },
                 obscureText: !textPrivacy,
                 decoration: InputDecoration(
-                    suffixIconColor: Colors.grey,
                     prefixIconColor: Colors.grey,
+                    suffixIconColor: Colors.grey,
+                    errorText: _hasError ? passwordErrorMessage : null,
                     suffixIcon: IconButton(
                       icon: Icon(
                         textPrivacy ? Icons.visibility_off : Icons.visibility,
@@ -93,14 +105,28 @@ class _SignupState extends State<Signup> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.0))),
                     onPressed: () async {
+                      setState(() {
+                        if (email.isEmpty ||
+                            !email.contains('@') ||
+                            password.isEmpty) {
+                          emailErrorMessage = 'Invalid Email Address';
+                          passwordErrorMessage = "Enter a password";
+                          _hasError = true;
+                        } else {
+                          passwordErrorMessage = '';
+                          emailErrorMessage = '';
+                        }
+                      });
                       try {
-                        await _auth.createUserWithEmailAndPassword(
+                        await _auth.signInWithEmailAndPassword(
                             email: email, password: password);
-                            Navigator.push(context, MaterialPageRoute(builder: (context)=> Login()));
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=> HomeScreen()));
                       } catch (error) {
                         if (error is FirebaseAuthException) {
-                          String errorMessage = error.message??"an error occured";
-                          
+                          String errorMessage =
+                              error.message ?? 'An error occured';
+                          if (errorMessage ==
+                              "An internal error has occurred. [ INVALID_LOGIN_CREDENTIALS ]") {
                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.all(
@@ -108,26 +134,36 @@ class _SignupState extends State<Signup> {
                                 behavior: SnackBarBehavior.floating,
                                 content: Column(
                                   mainAxisSize: MainAxisSize.min,
+                                  children: [Text('Invalid Email or Password')])));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(15.0))),
+                                behavior: SnackBarBehavior.floating,
+                                content:Column(
+                                  mainAxisSize: MainAxisSize.min,                                     
                                   children: [Text('$errorMessage')])));
-                           
-                          
+                          }
                         } else {
                           print("An unexpected error occurred: $error");
                         }
                       }
                     },
                     child: const Text(
-                      "SIGNUP",
+                      "LOGIN",
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     )),
               )),
               const SizedBox(
-                height: 5.0,
+                height: 15.0,
               ),
-              Center(child: TextButton(onPressed: (){
-                Navigator.push(context, MaterialPageRoute(builder: ((context) => Login())));
-              }, child: Text("Already Signup? Go to Login", style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold, color: Colors.black),)))
+              const Center(
+                  child: Text(
+                "Forgot Password?",
+                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w800),
+              ))
             ],
           ),
         ),

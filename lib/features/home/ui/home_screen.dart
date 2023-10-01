@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:food_app/features/data/food_list.dart';
-import 'package:food_app/features/app_components/filter_screen.dart';
-import 'package:food_app/features/app_components/selected_item.dart';
+import 'package:food_app/features/filter_screen_page/ui/filter_screen.dart';
+import 'package:food_app/features/selected_item_page/ui/selected_item.dart';
 
 final FirebaseFirestore _firebasestore = FirebaseFirestore.instance;
 
@@ -20,10 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> updateList = [];
   List<Map<String, dynamic>> foodData = FoodList.foodItems;
   List<String> categories = ['Breakfast', 'Lunch', 'Dinner'];
-  List<String> cuisines = ['Italian', 'American', 'Japanese','International'];
+  List<String> cuisines = ['Italian', 'American', 'Japanese', 'International'];
   List<String> selectedFilter = [];
- 
- 
 
   @override
   void initState() {
@@ -44,29 +42,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void filterList(List<String> categorySearch) {
     setState(() {
-      
       selectedFilter = List.from(categorySearch);
       updateList = foodData
           .where((element) =>
-              categorySearch.isEmpty || categorySearch.any((filter) => element["category"]
+              categorySearch.isEmpty ||
+              categorySearch.any((filter) => element["category"]
                   .toString()
                   .toLowerCase()
-                  .contains(filter.toLowerCase()))||categorySearch.any((filter) => element["cuisine"]
+                  .contains(filter.toLowerCase())) ||
+              categorySearch.any((filter) => element["cuisine"]
                   .toString()
                   .toLowerCase()
-                  .contains(filter.toLowerCase()))
-              )
+                  .contains(filter.toLowerCase())))
           .toList();
-      
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-         FocusManager.instance.primaryFocus?.unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
       },
       child: Scaffold(
         body: SafeArea(
@@ -92,10 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       autofocus: false,
                       decoration: InputDecoration(
+                          prefixIconColor: Colors.grey,
                           hintText: "Search",
                           prefixIcon: Icon(Icons.search),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(15.0)),
                           )),
                     ),
                   ),
@@ -118,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                       cuisine: cuisines,
                                       applyFilter: filterList,
                                       selectedItem: selectedFilter,
-                                      
                                     )));
                           },
                           child: const Icon(
@@ -146,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               );
                             } else {
                               // final List<FoodModel> foodList = [];
-    
+
                               // List<Map<String, dynamic>> data =
                               //     FoodList.foodItems;
                               // for (var food in data) {
@@ -159,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: updateList.length,
                                 itemBuilder: (context, index) {
                                   final foodItem = updateList[index];
-    
+
                                   return GestureDetector(
                                     onTap: () {
                                       setState(() {
