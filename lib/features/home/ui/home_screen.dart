@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:food_app/features/data/food_list.dart';
+import 'package:food_app/utilites/app_components/constants.dart';
+import 'package:food_app/utilites/app_components/custom_List_Tile.dart';
+import 'package:food_app/utilites/app_components/filter_button.dart';
+import 'package:food_app/data/food_list.dart';
 import 'package:food_app/features/filter_screen_page/ui/filter_screen.dart';
 import 'package:food_app/features/selected_item_page/ui/selected_item.dart';
 
@@ -28,6 +30,73 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     updateList = foodData;
   }
+
+  StreamBuilder<QuerySnapshot<Object?>> buildFoodList() {
+    return StreamBuilder<QuerySnapshot>(
+                        stream: _firebasestore.collection("Food").snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Center(
+                              child: Text("Error: ${snapshot.hasError}"),
+                            );
+                          } else {
+                            
+                            return ListView.builder(
+                              itemCount: updateList.length,
+                              itemBuilder: (context, index) {
+                                final foodItem = updateList[index];
+
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: ((context) =>
+                                                  SelectedItem(
+                                                    selectedItem:
+                                                        updateList[index],
+                                                  ))));
+                                    });
+                                  },
+                                  child: CustomListTile(
+                                    title: foodItem['name'],
+                                    description: foodItem['description'],
+                                    imageUrl: foodItem['image_url'],
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        });
+  }
+
+  Future<dynamic> bottomSheet(BuildContext context) async{
+    return await showModalBottomSheet(
+                              context: context,
+                              builder: ((context) => FilterScreen(
+                                    category: categories,
+                                    cuisine: cuisines,
+                                    applyFilter: filterList,
+                                    selectedItem: selectedFilter,
+                                  )));
+  }
+
+  TextField textField() {
+    return TextField(
+                    controller: _searchValue,
+                    onChanged: (_searchValue) {
+                      searchItem(_searchValue);
+                    },
+                    autofocus: false,
+                    decoration: kSearchTextField(),
+                  );
+  }
+
+  
 
   void searchItem(String search) {
     setState(() {
@@ -73,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Center(
                   child: Text(
                 "Search",
-                style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
+                style: kMainHeadingStyle,
               )),
               const SizedBox(
                 height: 30.0,
@@ -81,47 +150,12 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _searchValue,
-                      onChanged: (_searchValue) {
-                        searchItem(_searchValue);
-                      },
-                      autofocus: false,
-                      decoration: InputDecoration(
-                          prefixIconColor: Colors.grey,
-                          hintText: "Search",
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(15.0)),
-                          )),
-                    ),
+                    child: textField(),
                   ),
                   const SizedBox(
                     width: 15.0,
                   ),
-                  SizedBox(
-                      height: 60,
-                      child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0)),
-                              backgroundColor:
-                                  const Color.fromARGB(255, 87, 167, 129)),
-                          onPressed: () {
-                            showModalBottomSheet(
-                                context: context,
-                                builder: ((context) => FilterScreen(
-                                      category: categories,
-                                      cuisine: cuisines,
-                                      applyFilter: filterList,
-                                      selectedItem: selectedFilter,
-                                    )));
-                          },
-                          child: const Icon(
-                            Icons.filter_alt,
-                            size: 30.0,
-                          )))
+                  FilterButton(onPressed:(){bottomSheet(context);},)
                 ],
               ),
               const SizedBox(
@@ -131,55 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Scaffold(
                   body: SafeArea(
                     child: Center(
-                      child: StreamBuilder<QuerySnapshot>(
-                          stream: _firebasestore.collection("Food").snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Center(
-                                child: Text("Error: ${snapshot.hasError}"),
-                              );
-                            } else {
-                              // final List<FoodModel> foodList = [];
-
-                              // List<Map<String, dynamic>> data =
-                              //     FoodList.foodItems;
-                              // for (var food in data) {
-                              //   foodList.add(FoodModel(
-                              //       name: food['name'],
-                              //       description: food['description'],
-                              //       imageUrl: food['image_url']));
-                              // }
-                              return ListView.builder(
-                                itemCount: updateList.length,
-                                itemBuilder: (context, index) {
-                                  final foodItem = updateList[index];
-
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                                builder: ((context) =>
-                                                    SelectedItem(
-                                                      selectedItem:
-                                                          updateList[index],
-                                                    ))));
-                                      });
-                                    },
-                                    child: CustomListTile(
-                                      title: foodItem['name'],
-                                      description: foodItem['description'],
-                                      imageUrl: foodItem['image_url'],
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                          }),
+                      child: buildFoodList(),
                     ),
                   ),
                 ),
@@ -189,58 +175,5 @@ class _HomeScreenState extends State<HomeScreen> {
         )),
       ),
     );
-  }
-}
-
-class CustomListTile extends StatelessWidget {
-  final String? title;
-  final String? description;
-  final String? imageUrl;
-
-  CustomListTile({this.title, this.imageUrl, this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(15.0),
-      padding: const EdgeInsets.all(15.0),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.all(Radius.circular(10.0)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 4.0,
-            ),
-          ]),
-      child: Column(children: [
-        Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15.0),
-              image: DecorationImage(
-                  image: imageUrl != null
-                      ? NetworkImage(imageUrl!)
-                      : const NetworkImage(
-                          'https://media.cloudbooklet.com/uploads/2023/06/21111428/luma-ai-1-750x422.jpg'))),
-        ),
-        const SizedBox(
-          height: 15.0,
-        ),
-        Container(
-          child: Text(
-            title!,
-            style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-          ),
-        ),
-        const SizedBox(
-          height: 15.0,
-        ),
-        Container(
-          child: description != null ? Text(description!) : const Text('Empty'),
-        )
-      ]),
-    );
-  }
+  }  
 }

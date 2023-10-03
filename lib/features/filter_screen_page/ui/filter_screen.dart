@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:food_app/utilites/app_components/constants.dart';
 
 class FilterScreen extends StatefulWidget {
   final List<String> category;
@@ -131,7 +132,7 @@ class _FilterScreenState extends State<FilterScreen> {
                     },
                     child: Text(
                       "Apply",
-                      style: TextStyle(fontSize: 18.0),
+                      style: kButtonStyle,
                     )),
               ),
             ),
@@ -145,7 +146,7 @@ class _FilterScreenState extends State<FilterScreen> {
                     },
                     child: Text(
                       "Clear Filter",
-                      style: TextStyle(fontSize: 18.0),
+                      style: kButtonStyle,
                     )))
           ],
         ),
